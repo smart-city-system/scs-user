@@ -1,0 +1,73 @@
+package http
+
+import (
+	"scs-user/internal/dto"
+	services "scs-user/internal/services"
+	"scs-user/pkg/errors"
+	"scs-user/pkg/validation"
+
+	"github.com/labstack/echo/v4"
+)
+
+// Handler
+type UserHandler struct {
+	svc services.UserService
+}
+
+// NewHandler constructor
+func NewUserHandler(svc services.UserService) *UserHandler {
+	return &UserHandler{svc: svc}
+}
+
+func (h *UserHandler) CreateUser() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		createUserDto := &dto.CreateUserDto{}
+		if err := c.Bind(createUserDto); err != nil {
+			return errors.NewBadRequestError("Invalid request body")
+		}
+
+		// Validate the DTO
+		if err := validation.ValidateStruct(createUserDto); err != nil {
+			return err
+		}
+
+		createdUser, err := h.svc.CreateUser(c.Request().Context(), createUserDto)
+		if err != nil {
+			return err
+		}
+		createdUser.Password = ""
+		return c.JSON(201, createdUser)
+	}
+}
+
+func (h *UserHandler) GetUsers() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		guards, err := h.svc.GetUsers(c.Request().Context())
+		if err != nil {
+			return err
+		}
+		return c.JSON(200, guards)
+	}
+}
+
+// func (h *UserHandler) GetAssignments() echo.HandlerFunc {
+// 	return func(c echo.Context) error {
+// 		userID := "72b194cd-3cb1-4653-b7d5-ed2fc032ed62"
+// 		assignments, err := h.svc.GetAssignments(c.Request().Context(), userID)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		return c.JSON(200, assignments)
+// 	}
+// }
+// func (h *UserHandler) CompleteStep() echo.HandlerFunc {
+// 	return func(c echo.Context) error {
+// 		assignmentId := c.Param("assignmentId")
+// 		stepId := c.Param("stepId")
+// 		err := h.svc.CompleteStep(c.Request().Context(), assignmentId, stepId)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		return c.JSON(200, "success")
+// 	}
+// }
