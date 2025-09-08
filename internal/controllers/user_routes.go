@@ -10,4 +10,6 @@ func (h *UserHandler) RegisterRoutes(g *echo.Group, mw *middleware.MiddlewareMan
 
 	g.POST("", mw.JWTAuth(h.CreateUser()))
 	g.GET("", mw.JWTAuth(h.GetUsers()))
+	g.GET("/me", mw.JWTAuth(h.GetMe()))
+
 }

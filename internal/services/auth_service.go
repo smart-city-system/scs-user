@@ -34,3 +34,13 @@ func (s *AuthService) Login(ctx context.Context, loginDto *dto.LoginRequest) (*d
 
 	return &dto.LoginResponse{Token: token}, nil
 }
+
+func (s *AuthService) ValidateToken(ctx context.Context, token string) (*dto.ValidateTokenResponse, error) {
+	err := utils.ValidateToken(token)
+	if err != nil {
+		return nil, errors.NewUnauthorizedError("Invalid token")
+	}
+	return &dto.ValidateTokenResponse{
+		Valid: true,
+	}, nil
+}

@@ -50,6 +50,13 @@ func (s *UserService) GetUsers(ctx context.Context) ([]models.User, error) {
 	}
 	return users, nil
 }
+func (s *UserService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
+	user, err := s.userRepo.GetUserByID(ctx, id)
+	if err != nil {
+		return nil, errors.NewDatabaseError("get user by id", err)
+	}
+	return user, nil
+}
 
 func (s *UserService) Login(ctx context.Context, loginReq *dto.LoginRequest) (*dto.LoginResponse, error) {
 	user, err := s.userRepo.GetUserByEmail(ctx, loginReq.Email)

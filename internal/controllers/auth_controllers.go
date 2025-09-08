@@ -3,6 +3,7 @@ package http
 import (
 	"scs-user/internal/dto"
 	services "scs-user/internal/services"
+	"scs-user/pkg/errors"
 	"scs-user/pkg/validation"
 
 	"github.com/labstack/echo/v4"
@@ -10,11 +11,11 @@ import (
 
 // Handler
 type AuthHandler struct {
-	svc services.UserService
+	svc services.AuthService
 }
 
 // NewHandler constructor
-func NewAuthHandler(svc services.UserService) *AuthHandler {
+func NewAuthHandler(svc services.AuthService) *AuthHandler {
 	return &AuthHandler{svc: svc}
 }
 
@@ -35,5 +36,23 @@ func (h *AuthHandler) Login() echo.HandlerFunc {
 		}
 
 		return c.JSON(200, token)
+	}
+}
+func (h *AuthHandler) ValidateToken() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		validateTokenDto := &dto.ValidateTokenRequest{}
+		if err := c.Bind(validateTokenDto); err != nil {
+			return errors.NewBadRequestError("Invalid request body")
+		}
+		// Validate the DTO
+		if err := validation.ValidateStruct(validateTokenDto); err != nil {
+			return err
+		}
+
+		result, err := h.svc.ValidateToken(c.Request().Context(), validateTokenDto.Token)
+		if err != nil {
+			return err
+		}
+		return c.JSON(200, result)
 	}
 }

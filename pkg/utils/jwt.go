@@ -44,3 +44,8 @@ func ParseToken(tokenString string) (*Claims, error) {
 
 	return nil, err
 }
+
+func ValidateToken(tokenString string) error {
+	_, err := ParseToken(tokenString)
+	return err
+}

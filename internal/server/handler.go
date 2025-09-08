@@ -3,10 +3,11 @@ package server
 import (
 	"net/http"
 	controller "scs-user/internal/controllers"
+	my_middleware "scs-user/internal/middlewares"
 	repository "scs-user/internal/repositories"
 	service "scs-user/internal/services"
 
-	middleware "scs-user/internal/middlewares"
+	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/labstack/echo/v4"
 )
@@ -17,14 +18,23 @@ func (s *Server) MapHandlers(e *echo.Echo) error {
 
 	// Init service
 	userService := service.NewUserService(*userRepo)
-	authService := service.NewUserService(*userRepo)
+	authService := service.NewAuthService(*userRepo)
 	// Init handlers
 	userHandler := controller.NewUserHandler(*userService)
 	authHandler := controller.NewAuthHandler(*authService)
 
-	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.logger)
+	// Enable CORS for all origins
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowCredentials: false,
+	}))
+
+	mw := my_middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.logger)
 	e.Use(mw.RequestLoggerMiddleware)
 	e.Use(mw.ErrorHandlerMiddleware)
+	e.Use(mw.ResponseStandardizer)
 	v1 := e.Group("/api/v1")
 
 	health := v1.Group("/health")

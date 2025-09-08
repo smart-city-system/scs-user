@@ -29,8 +29,8 @@ func main() {
 		log.Fatalf("Failed to parse config: %v", err)
 	}
 	//Init logger
-	appLogger := logger.NewApiLogger(&cfg)
-	appLogger.InitLogger()
+	appLogger := logger.GetLogger()
+	appLogger.InitLogger(&cfg)
 	appLogger.Infof("LogLevel: %s, Mode: %s", cfg.Logger.Level, cfg.Server.Mode)
 
 	//Init db

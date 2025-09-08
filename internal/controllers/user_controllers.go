@@ -49,6 +49,16 @@ func (h *UserHandler) GetUsers() echo.HandlerFunc {
 		return c.JSON(200, guards)
 	}
 }
+func (h *UserHandler) GetMe() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId := c.Get("user_id").(string)
+		user, err := h.svc.GetUserByID(c.Request().Context(), userId)
+		if err != nil {
+			return err
+		}
+		return c.JSON(200, user)
+	}
+}
 
 // func (h *UserHandler) GetAssignments() echo.HandlerFunc {
 // 	return func(c echo.Context) error {
