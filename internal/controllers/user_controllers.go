@@ -5,6 +5,7 @@ import (
 	services "scs-user/internal/services"
 	"scs-user/pkg/errors"
 	"scs-user/pkg/validation"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -42,11 +43,29 @@ func (h *UserHandler) CreateUser() echo.HandlerFunc {
 
 func (h *UserHandler) GetUsers() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		guards, err := h.svc.GetUsers(c.Request().Context())
+		page := c.QueryParam("page")
+		limit := c.QueryParam("limit")
+		if page == "" {
+			page = "1"
+		}
+		if limit == "" {
+			limit = "10"
+		}
+		pageInt, err := strconv.Atoi(page)
+		if err != nil {
+			return errors.NewBadRequestError("Invalid page number")
+		}
+		limitInt, err := strconv.Atoi(limit)
+		if err != nil {
+			return errors.NewBadRequestError("Invalid limit")
+		}
+
+		users, err := h.svc.GetUsers(c.Request().Context(), pageInt, limitInt)
 		if err != nil {
 			return err
 		}
-		return c.JSON(200, guards)
+
+		return c.JSON(200, users)
 	}
 }
 func (h *UserHandler) GetMe() echo.HandlerFunc {
@@ -57,6 +76,25 @@ func (h *UserHandler) GetMe() echo.HandlerFunc {
 			return err
 		}
 		return c.JSON(200, user)
+	}
+}
+
+func (h *UserHandler) VerifyAccount() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		verifyAccountDto := &dto.VerifyAccountRequest{}
+		if err := c.Bind(verifyAccountDto); err != nil {
+			return errors.NewBadRequestError("Invalid request body")
+		}
+		// Validate the DTO
+		if err := validation.ValidateStruct(verifyAccountDto); err != nil {
+			return err
+		}
+
+		err := h.svc.VerifyAccount(c.Request().Context(), verifyAccountDto.Token)
+		if err != nil {
+			return err
+		}
+		return c.JSON(200, "success")
 	}
 }
 

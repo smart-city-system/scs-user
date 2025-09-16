@@ -19,13 +19,17 @@ func NewAuthService(userRepo repositories.UserRepository) *AuthService {
 func (s *AuthService) Login(ctx context.Context, loginDto *dto.LoginRequest) (*dto.LoginResponse, error) {
 	user, err := s.userRepo.GetUserByEmail(ctx, loginDto.Email)
 	if err != nil {
-		return nil, errors.NewNotFoundError("User not found")
+		return nil, errors.NewUnauthorizedError("User not found")
 	}
 
 	// Verify the password
 	if err := utils.VerifyPassword(user.Password, loginDto.Password); err != nil {
 		return nil, errors.NewUnauthorizedError("Invalid credentials")
 	}
+	if !user.IsActive {
+		return nil, errors.NewUnauthorizedError("User is not active")
+	}
+
 	// Generate JWT token
 	token, err := utils.GenerateToken(user.ID.String(), user.Role)
 	if err != nil {

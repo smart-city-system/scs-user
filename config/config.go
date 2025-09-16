@@ -8,6 +8,10 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	Logger   Logger
+	Kafka    KafkaConfig
+}
+type KafkaConfig struct {
+	Brokers string `env:"KAFKA_BROKERS"`
 }
 
 // Logger config

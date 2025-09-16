@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	config "scs-user/config"
+	kafka_client "scs-user/pkg/kafka"
 	logger "scs-user/pkg/logger"
 	"time"
 
@@ -17,14 +18,15 @@ const (
 )
 
 type Server struct {
-	Echo   *echo.Echo
-	cfg    *config.Config
-	db     *gorm.DB
-	logger logger.Logger
+	Echo     *echo.Echo
+	cfg      *config.Config
+	db       *gorm.DB
+	logger   logger.Logger
+	producer *kafka_client.Producer
 }
 
-func NewServer(cfg *config.Config, db *gorm.DB, logger logger.Logger) *Server {
-	return &Server{cfg: cfg, db: db, logger: logger, Echo: echo.New()}
+func NewServer(cfg *config.Config, db *gorm.DB, logger logger.Logger, producer *kafka_client.Producer) *Server {
+	return &Server{cfg: cfg, db: db, logger: logger, Echo: echo.New(), producer: producer}
 }
 func (s *Server) Run() error {
 	// Map handlers

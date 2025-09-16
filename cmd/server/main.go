@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,12 +11,15 @@ import (
 	"scs-user/internal/models"
 	"scs-user/internal/server"
 	"scs-user/pkg/db"
+	kafka_client "scs-user/pkg/kafka"
 	"scs-user/pkg/logger"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
+	"github.com/segmentio/kafka-go"
 )
 
 func main() {
@@ -48,8 +52,23 @@ func main() {
 	if err != nil {
 		appLogger.Fatalf("Database migration failed: %s", err)
 	}
+
+	// Initialize Kafka producer
+	producer := startKafkaProducer("user.created", &cfg, appLogger)
+
+	// Test sending a Kafka message after producer initialization
+	ctx := context.Background()
+	err = producer.WriteMessages(ctx, kafka.Message{
+		Key:   []byte("test-key"),
+		Value: []byte("Hello, Kafka!"),
+	})
+	if err != nil {
+		appLogger.Errorf("Failed to send Kafka message: %v", err)
+	} else {
+		appLogger.Info("Kafka message sent successfully")
+	}
 	// Initialize the server
-	s := server.NewServer(&cfg, psqlDb, appLogger)
+	s := server.NewServer(&cfg, psqlDb, appLogger, producer)
 
 	// Create a channel to listen for OS signals
 	quit := make(chan os.Signal, 1)
@@ -77,4 +96,19 @@ func main() {
 	}
 
 	appLogger.Info("Server and consumer stopped.")
+}
+func startKafkaProducer(topic string, cfg *config.Config, logger *logger.ApiLogger) *kafka_client.Producer {
+	// Initialize Kafka producer
+	fmt.Println("topic:", topic)
+	kafkaCfg := kafka_client.Config{
+		Brokers: strings.Split(cfg.Kafka.Brokers, ","),
+		Topic:   topic,
+	}
+	producerCfg := kafka_client.ProducerConfig{
+		BatchSize:    1,
+		BatchTimeout: 100,   // In milliseconds
+		Async:        false, // Set to false for immediate delivery
+	}
+	producer := kafka_client.NewProducer(&kafkaCfg, &producerCfg)
+	return producer
 }

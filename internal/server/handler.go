@@ -15,9 +15,10 @@ import (
 func (s *Server) MapHandlers(e *echo.Echo) error {
 	// Init repositories
 	userRepo := repository.NewUserRepository(s.db)
+	userPremiseRepo := repository.NewUserPremiseRepository(s.db)
 
 	// Init service
-	userService := service.NewUserService(*userRepo)
+	userService := service.NewUserService(*userRepo, *userPremiseRepo, *s.producer)
 	authService := service.NewAuthService(*userRepo)
 	// Init handlers
 	userHandler := controller.NewUserHandler(*userService)
