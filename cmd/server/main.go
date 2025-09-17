@@ -24,8 +24,10 @@ import (
 
 func main() {
 	// Load configuration from config file
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Failed to load env file: %v", err)
+	if os.Getenv("ENV") != "production" {
+		if err := godotenv.Load(); err != nil {
+			log.Println("No .env file found, skipping...")
+		}
 	}
 	var cfg config.Config
 	err := env.Parse(&cfg)
