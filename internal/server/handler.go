@@ -7,9 +7,11 @@ import (
 	repository "scs-user/internal/repositories"
 	service "scs-user/internal/services"
 
-	"github.com/labstack/echo/v4/middleware"
+	_ "scs-user/docs" // Import generated docs
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 func (s *Server) MapHandlers(e *echo.Echo) error {
@@ -42,12 +44,25 @@ func (s *Server) MapHandlers(e *echo.Echo) error {
 	usersGroup := v1.Group("/users")
 	authGroup := v1.Group("/auth")
 
-	health.GET("", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"status": "OK"})
-	})
+	health.GET("", s.HealthCheck)
 	userHandler.RegisterRoutes(usersGroup, mw)
 	authHandler.RegisterRoutes(authGroup)
 
+	// Swagger documentation route
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	return nil
 
+}
+
+// HealthCheck godoc
+// @Summary Health check
+// @Description Check if the service is running and healthy
+// @Tags health
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]string "Service is healthy"
+// @Router /health [get]
+func (s *Server) HealthCheck(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{"status": "OK"})
 }

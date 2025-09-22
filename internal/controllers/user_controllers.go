@@ -20,6 +20,19 @@ func NewUserHandler(svc services.UserService) *UserHandler {
 	return &UserHandler{svc: svc}
 }
 
+// CreateUser godoc
+// @Summary Create a new user
+// @Description Create a new user account with the provided information
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateUserDto true "User creation data"
+// @Success 201 {object} models.User "User created successfully"
+// @Failure 400 {object} map[string]interface{} "Bad request"
+// @Failure 409 {object} map[string]interface{} "User already exists"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Security BearerAuth
+// @Router /users [post]
 func (h *UserHandler) CreateUser() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		createUserDto := &dto.CreateUserDto{}
@@ -41,6 +54,20 @@ func (h *UserHandler) CreateUser() echo.HandlerFunc {
 	}
 }
 
+// GetUsers godoc
+// @Summary Get paginated list of users
+// @Description Retrieve a paginated list of all users
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Number of items per page" default(10)
+// @Success 200 {object} dto.UserListResponse "Users retrieved successfully"
+// @Failure 400 {object} map[string]interface{} "Bad request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Security BearerAuth
+// @Router /users [get]
 func (h *UserHandler) GetUsers() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		page := c.QueryParam("page")
@@ -68,6 +95,19 @@ func (h *UserHandler) GetUsers() echo.HandlerFunc {
 		return c.JSON(200, users)
 	}
 }
+
+// GetMe godoc
+// @Summary Get current user profile
+// @Description Get the profile information of the currently authenticated user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.User "User profile retrieved successfully"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 404 {object} map[string]interface{} "User not found"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Security BearerAuth
+// @Router /users/me [get]
 func (h *UserHandler) GetMe() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userId := c.Get("user_id").(string)
@@ -79,6 +119,18 @@ func (h *UserHandler) GetMe() echo.HandlerFunc {
 	}
 }
 
+// VerifyAccount godoc
+// @Summary Verify user account
+// @Description Verify a user account using a verification token
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body dto.VerifyAccountRequest true "Verification token"
+// @Success 200 {object} string "Account verified successfully"
+// @Failure 400 {object} map[string]interface{} "Bad request"
+// @Failure 401 {object} map[string]interface{} "Invalid token"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /users/verify [post]
 func (h *UserHandler) VerifyAccount() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		verifyAccountDto := &dto.VerifyAccountRequest{}
